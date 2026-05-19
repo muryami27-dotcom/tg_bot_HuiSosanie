@@ -77,8 +77,8 @@
         // ЭТУ ССЫЛКУ ТЫ ЗАМЕНИШЬ НА ССЫЛКУ ОТ RENDER
         const SERVER_URL = "http://localhost:8000"; 
 
-        // Сначала загружаем текущий баланс игрока из сервера при открытии
-        async def loadTotalScore() {
+        // Исправленный вариант для index.html
+        async function loadTotalScore() {
             try {
                 let response = await fetch(${SERVER_URL}/get_score?user_id=${userId});
                 let data = await response.json();
