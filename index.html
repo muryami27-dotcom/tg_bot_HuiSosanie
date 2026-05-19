@@ -75,7 +75,7 @@
         const clickBtn = document.getElementById('clickerBtn');
 
         // ЭТУ ССЫЛКУ ТЫ ЗАМЕНИШЬ НА ССЫЛКУ ОТ RENDER
-        const SERVER_URL = "http://localhost:8000"; 
+        const SERVER_URL = "https://hui-clicker-bot.vercel.app/"; 
 
         // Исправленный вариант для index.html
         async function loadTotalScore() {
@@ -107,7 +107,7 @@
                 clicksToSend = 0; // Сбрасываем счетчик пачки перед отправкой
 
                 try {
-                    await fetch(${SERVER_URL}/click, {
+                    await fetch('https://hui-clicker-bot.vercel.app/click', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user_id: userId, name: firstName, count: currentBatch })
