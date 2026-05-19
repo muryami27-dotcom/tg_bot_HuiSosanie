@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Прикольный Кликер</title>
+    <title>Кликер сосания хуёв</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: #1a1a2e;
             color: #ffffff;
             display: flex;
@@ -21,63 +21,74 @@
         }
         h1 {
             font-size: 24px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             color: #e94560;
             text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
         }
         .score-container {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
             background: rgba(255, 255, 255, 0.05);
             padding: 10px 30px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .click-btn {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
+            padding: 20px 40px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
             background: linear-gradient(145deg, #ff477e, #b7094c);
             border: none;
-            box-shadow: 0 10px 25px rgba(183, 9, 76, 0.6), 
-                        inset 0 4px 10px rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(183, 9, 76, 0.6);
             cursor: pointer;
-            font-size: 50px;
-            transition: transform 0.1s ease;
             outline: none;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
+        
         .click-btn:active {
-            transform: scale(0.92);
-            box-shadow: 0 5px 15px rgba(183, 9, 76, 0.4);
+            transform: scale(1.15); 
+            box-shadow: 0 15px 35px rgba(255, 71, 126, 0.8);
         }
     </style>
 </head>
 <body>
 
-    <h1>Твой баланс</h1>
-    <div class="score-container">🪙 <span id="score">0</span></div>
+    <h1>Твой баланс хуе сосания</h1>
+    <div class="score-container">🍆 <span id="score">0</span></div>
 
-    <button class="click-btn" id="clickerBtn">🐾</button>
+    <button class="click-btn" id="clickerBtn">пососать</button>
 
     <script>
-        // Инициализируем Телеграм Web App
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем окно на максимум
+        tg.expand();
 
         let score = 0;
         const scoreDisplay = document.getElementById('score');
         const clickBtn = document.getElementById('clickerBtn');
 
-        // Логика клика
         clickBtn.addEventListener('click', () => {
             score++;
             scoreDisplay.textContent = score;
             
-            // Легкая вибрация на телефоне при клике (если поддерживается)
             if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
+                tg.HapticFeedback.impactOccurred('medium'); 
             }
+        });
+
+        
+        window.addEventListener('beforeunload', () => {
+            if (score > 0) {
+                tg.sendData(score.toString());
+            }
+        });
+        
+        tg.BackButton.onClick(() => {
+            if (score > 0) tg.sendData(score.toString());
+            tg.closeScanQrPopup();
         });
     </script>
 </body>
