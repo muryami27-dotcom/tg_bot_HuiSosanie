@@ -65,6 +65,16 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Достаем старые клики, если они были сохранены в памяти телефона
+        let savedScore = parseInt(localStorage.getItem('unsaved_clicks')) || 0;
+
+        // МАГИЯ: Если при открытии у нас есть сохраненные клики, отправляем их боту
+        if (savedScore > 0) {
+            tg.sendData(savedScore.toString());
+            localStorage.removeItem('unsaved_clicks'); // Очищаем память, так как боту уже передали
+            savedScore = 0;
+        }
+
         let score = 0;
         const scoreDisplay = document.getElementById('score');
         const clickBtn = document.getElementById('clickerBtn');
@@ -72,15 +82,12 @@
         clickBtn.addEventListener('click', () => {
             score++;
             scoreDisplay.textContent = score;
+
+            // Записываем каждый клик в память телефона на случай, если игру закроют крестиком
+            localStorage.setItem('unsaved_clicks', score.toString());
             
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
-            }
-
-            // МАГИЯ: отправляем боту информацию о том, что был совершён ОДИН клик
-            // Мы шлём "1" боту в фоновом режиме
-            if (tg.sendData) {
-                tg.sendData("1"); 
             }
         });
     </script>
