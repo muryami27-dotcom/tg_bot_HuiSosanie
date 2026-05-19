@@ -65,29 +65,34 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Достаем старые клики, если они были сохранены в памяти телефона
-        let savedScore = parseInt(localStorage.getItem('unsaved_clicks')) || 0;
-
-        // МАГИЯ: Если при открытии у нас есть сохраненные клики, отправляем их боту
-        if (savedScore > 0) {
-            tg.sendData(savedScore.toString());
-            localStorage.removeItem('unsaved_clicks'); // Очищаем память, так как боту уже передали
-            savedScore = 0;
-        }
+        // Получаем ID пользователя из Телеграма безопасным путем
+        const userId = tg.initDataUnsafe?.user?.id || "unknown";
+        const firstName = tg.initDataUnsafe?.user?.first_name || "Аноним";
 
         let score = 0;
         const scoreDisplay = document.getElementById('score');
         const clickBtn = document.getElementById('clickerBtn');
 
-        clickBtn.addEventListener('click', () => {
+        // СЮДА МЫ ПОТОМ ВСТАВИМ ССЫЛКУ НА ТВОЙ СЕРВЕР (пока оставляем локальный адрес для теста)
+        const SERVER_URL = "http://localhost:8000"; 
+
+        clickBtn.addEventListener('click', async () => {
             score++;
             scoreDisplay.textContent = score;
-
-            // Записываем каждый клик в память телефона на случай, если игру закроют крестиком
-            localStorage.setItem('unsaved_clicks', score.toString());
             
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            // МАГИЯ: каждую секунду отправляем клик на сервер абсолютно незаметно!
+            try {
+                fetch(${SERVER_URL}/click, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, name: firstName })
+                });
+            } catch (e) {
+                console.log("Ошибка отправки клика на сервер");
             }
         });
     </script>
