@@ -34,30 +34,29 @@
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
         .click-btn {
-            padding: 20px 40px;
-            font-size: 28px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            font-size: 24px;
             font-weight: bold;
             color: #ffffff;
             background: linear-gradient(145deg, #ff477e, #b7094c);
             border: none;
-            border-radius: 50px;
             box-shadow: 0 10px 25px rgba(183, 9, 76, 0.6);
             cursor: pointer;
             outline: none;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            transition: transform 0.1s ease;
         }
-        
         .click-btn:active {
-            transform: scale(1.15); 
+            transform: scale(1.2);
             box-shadow: 0 15px 35px rgba(255, 71, 126, 0.8);
         }
     </style>
 </head>
 <body>
 
-    <h1>Твой баланс хуе сосания</h1>
+    <h1>Ты насосала:</h1>
     <div class="score-container">🍆 <span id="score">0</span></div>
 
     <button class="click-btn" id="clickerBtn">пососать</button>
@@ -75,20 +74,14 @@
             scoreDisplay.textContent = score;
             
             if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium'); 
+                tg.HapticFeedback.impactOccurred('medium');
             }
-        });
 
-        
-        window.addEventListener('beforeunload', () => {
-            if (score > 0) {
-                tg.sendData(score.toString());
+            // МАГИЯ: отправляем боту информацию о том, что был совершён ОДИН клик
+            // Мы шлём "1" боту в фоновом режиме
+            if (tg.sendData) {
+                tg.sendData("1"); 
             }
-        });
-        
-        tg.BackButton.onClick(() => {
-            if (score > 0) tg.sendData(score.toString());
-            tg.closeScanQrPopup();
         });
     </script>
 </body>
