@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер сосания хуёв</title>
+    <title>Мемный Кликер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -56,7 +56,7 @@
 </head>
 <body>
 
-    <h1>Ты насосала:</h1>
+    <h1>Ты накликала:</h1>
     <div class="score-container">🍆 <span id="score">0</span></div>
 
     <button class="click-btn" id="clickerBtn">пососать</button>
@@ -65,36 +65,60 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Получаем ID пользователя из Телеграма безопасным путем
         const userId = tg.initDataUnsafe?.user?.id || "unknown";
         const firstName = tg.initDataUnsafe?.user?.first_name || "Аноним";
 
         let score = 0;
+        let clicksToSend = 0; // Накопленные клики, которые еще не улетели на сервер
+        
         const scoreDisplay = document.getElementById('score');
         const clickBtn = document.getElementById('clickerBtn');
 
-        // СЮДА МЫ ПОТОМ ВСТАВИМ ССЫЛКУ НА ТВОЙ СЕРВЕР (пока оставляем локальный адрес для теста)
+        // ЭТУ ССЫЛКУ ТЫ ЗАМЕНИШЬ НА ССЫЛКУ ОТ RENDER
         const SERVER_URL = "http://localhost:8000"; 
 
-        clickBtn.addEventListener('click', async () => {
+        // Сначала загружаем текущий баланс игрока из сервера при открытии
+        async def loadTotalScore() {
+            try {
+                let response = await fetch(${SERVER_URL}/get_score?user_id=${userId});
+                let data = await response.json();
+                if (data.clicks) {
+                    score = data.clicks;
+                    scoreDisplay.textContent = score;
+                }
+            } catch (e) { console.log("Не удалось загрузить баланс"); }
+        }
+        loadTotalScore();
+
+        clickBtn.addEventListener('click', () => {
             score++;
+            clicksToSend++; // Добавляем в пачку для отправки
             scoreDisplay.textContent = score;
             
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
-
-            // МАГИЯ: каждую секунду отправляем клик на сервер абсолютно незаметно!
-            try {
-                fetch(${SERVER_URL}/click, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, name: firstName })
-                });
-            } catch (e) {
-                console.log("Ошибка отправки клика на сервер");
-            }
         });
+
+        // Функция автоматической отправки накопленных кликов каждые 2 секунды
+        setInterval(async () => {
+            if (clicksToSend > 0) {
+                let currentBatch = clicksToSend;
+                clicksToSend = 0; // Сбрасываем счетчик пачки перед отправкой
+
+                try {
+                    await fetch(${SERVER_URL}/click, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId, name: firstName, count: currentBatch })
+                    });
+                    console.log(Успешно отправлено кликов: ${currentBatch});
+                } catch (e) {
+                    clicksToSend += currentBatch; // Если сеть упала, возвращаем клики обратно в пачку
+                    console.log("Ошибка отправки пачки кликов");
+                }
+            }
+        }, 2000);
     </script>
 </body>
 </html>
