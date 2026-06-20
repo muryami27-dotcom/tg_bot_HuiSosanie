@@ -1,124 +1,132 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мемный Кликер</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #1a1a2e;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            user-select: none;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            color: #e94560;
-            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
-        }
-        .score-container {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 50px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 30px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .click-btn {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffffff;
-            background: linear-gradient(145deg, #ff477e, #b7094c);
-            border: none;
-            box-shadow: 0 10px 25px rgba(183, 9, 76, 0.6);
-            cursor: pointer;
-            outline: none;
-            transition: transform 0.1s ease;
-        }
-        .click-btn:active {
-            transform: scale(1.2);
-            box-shadow: 0 15px 35px rgba(255, 71, 126, 0.8);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кликер</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+body{
+    background:#1a1a2e;
+    color:white;
+    font-family:Arial,sans-serif;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    margin:0;
+}
+
+.score{
+    font-size:42px;
+    margin-bottom:40px;
+}
+
+button{
+    width:180px;
+    height:180px;
+    border:none;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:24px;
+    background:#e94560;
+    color:white;
+}
+</style>
 </head>
 <body>
 
-    <h1>Ты насосала:</h1>
-    <div class="score-container">🍆 <span id="score">0</span></div>
+<h2>Ты насосала:</h2>
 
-    <button class="click-btn" id="clickerBtn">пососать</button>
+<div class="score">
+🍆 <span id="score">0</span>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<button id="clickBtn">пососать</button>
 
-        const userId = tg.initDataUnsafe?.user?.id || "unknown";
-        const firstName = tg.initDataUnsafe?.user?.first_name || "Аноним";
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-        let score = 0;
-        let clicksToSend = 0; // Накопленные клики, которые еще не улетели на сервер
-        
-        const scoreDisplay = document.getElementById('score');
-        const clickBtn = document.getElementById('clickerBtn');
+const SERVER_URL = "https://hui-clicker-bot.vercel.app";
 
-        // ЭТУ ССЫЛКУ ТЫ ЗАМЕНИШЬ НА ССЫЛКУ ОТ RENDER
-        const SERVER_URL = "https://hui-clicker-bot.vercel.app/"; 
+const userId = tg.initDataUnsafe?.user?.id || 0;
+const firstName = tg.initDataUnsafe?.user?.first_name || "Аноним";
 
-        // Исправленный вариант для index.html
-        async function loadTotalScore() {
-            try {
-                let response = await fetch(${SERVER_URL}/get_score?user_id=${userId});
-                let data = await response.json();
-                if (data.clicks) {
-                    score = data.clicks;
-                    scoreDisplay.textContent = score;
-                }
-            } catch (e) { console.log("Не удалось загрузить баланс"); }
-        }
-        loadTotalScore();
+let score = 0;
+let pendingClicks = 0;
 
-        clickBtn.addEventListener('click', () => {
-            score++;
-            clicksToSend++; // Добавляем в пачку для отправки
-            scoreDisplay.textContent = score;
-            
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
+const scoreEl = document.getElementById("score");
+const btn = document.getElementById("clickBtn");
+
+async function loadScore() {
+    try {
+        const response = await fetch(
+            `${SERVER_URL}/get_score?user_id=${userId}`
+        );
+
+        const data = await response.json();
+
+        score = data.clicks || 0;
+        scoreEl.textContent = score;
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+loadScore();
+
+btn.addEventListener("click", () => {
+    score++;
+    pendingClicks++;
+
+    scoreEl.textContent = score;
+
+    if (tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred("medium");
+    }
+});
+
+async function sendClicks() {
+
+    if (pendingClicks <= 0) return;
+
+    const batch = pendingClicks;
+    pendingClicks = 0;
+
+    try {
+
+        await fetch(`${SERVER_URL}/click`, {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                user_id:userId,
+                name:firstName,
+                count:batch
+            })
         });
 
-        // Функция автоматической отправки накопленных кликов каждые 2 секунды
-        setInterval(async () => {
-            if (clicksToSend > 0) {
-                let currentBatch = clicksToSend;
-                clicksToSend = 0; // Сбрасываем счетчик пачки перед отправкой
+        console.log(`Отправлено ${batch}`);
 
-                try {
-                    await fetch('https://hui-clicker-bot.vercel.app/click', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: userId, name: firstName, count: currentBatch })
-                    });
-                    console.log(Успешно отправлено кликов: ${currentBatch});
-                } catch (e) {
-                    clicksToSend += currentBatch; // Если сеть упала, возвращаем клики обратно в пачку
-                    console.log("Ошибка отправки пачки кликов");
-                }
-            }
-        }, 2000);
-    </script>
+    } catch(err) {
+
+        pendingClicks += batch;
+        console.error(err);
+
+    }
+}
+
+setInterval(sendClicks, 2000);
+
+window.addEventListener("beforeunload", sendClicks);
+</script>
+
 </body>
 </html>
+```
